@@ -8,16 +8,22 @@ import java.util.Set;
 import javax.inject.Inject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.NPC;
+import net.runelite.api.events.BeforeRender;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.NpcChanged;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
+import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.NpcID;
+import net.runelite.api.widgets.Widget;
 import net.runelite.client.Notifier;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -35,6 +41,12 @@ public class NightmareQolPlugin extends Plugin
 	 * keep treating state changes as live rather than as a fresh sighting.
 	 */
 	private static final Duration RESPAWN_GRACE = Duration.ofSeconds(5);
+
+	@Inject
+	private Client client;
+
+	@Inject
+	private ClientThread clientThread;
 
 	@Inject
 	private Notifier notifier;
@@ -95,6 +107,7 @@ public class NightmareQolPlugin extends Plugin
 	{
 		overlayManager.remove(overlay);
 		overlayManager.remove(totemOverlay);
+		clientThread.invoke(() -> setTotemHudHidden(false));
 		reset();
 		totems.clear();
 	}
@@ -151,6 +164,39 @@ public class NightmareQolPlugin extends Plugin
 		{
 			lobbyNpc = null;
 			despawnedAt = Instant.now();
+		}
+	}
+
+	/**
+	 * While totem squares are on, hide the game's corner totem display so the health is moved
+	 * onto the totems instead of shown twice. Done every frame because game scripts can re-show it.
+	 */
+	@Subscribe
+	public void onBeforeRender(BeforeRender event)
+	{
+		if (config.highlightTotems() && !totems.isEmpty())
+		{
+			setTotemHudHidden(true);
+		}
+	}
+
+	@Subscribe
+	public void onConfigChanged(ConfigChanged event)
+	{
+		if (NightmareQolConfig.GROUP.equals(event.getGroup())
+			&& "highlightTotems".equals(event.getKey())
+			&& !config.highlightTotems())
+		{
+			clientThread.invoke(() -> setTotemHudHidden(false));
+		}
+	}
+
+	private void setTotemHudHidden(boolean hidden)
+	{
+		Widget hud = client.getWidget(InterfaceID.NightmareTotems.TOTEMS);
+		if (hud != null)
+		{
+			hud.setHidden(hidden);
 		}
 	}
 

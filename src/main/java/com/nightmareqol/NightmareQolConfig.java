@@ -45,8 +45,8 @@ public interface NightmareQolConfig extends Config
 
 	@ConfigItem(
 		keyName = "highlightTotems",
-		name = "Highlight totems",
-		description = "Outline attackable totems, green with lots of health left fading to red as they run out",
+		name = "Totem health squares",
+		description = "Moves the totem health bars onto the totems: a square over each totem you can hit, green with lots of health left, fading to red as it runs out. Hides the corner totem display while on.",
 		position = 20
 	)
 	default boolean highlightTotems()
