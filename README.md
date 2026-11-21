@@ -11,7 +11,7 @@ A RuneLite plugin for waiting at The Nightmare's lobby.
 - **Fight over alert:** a notification when the fight ends and she is asleep again.
 - **Last fight length:** shown in the overlay while she is asleep.
 
-- **Shadow recolor (off by default):** fills the black Grasping Claws shadow tiles with a color you pick, so they stand out against the dark floor.
+The plugin only reads The Nightmare's state as seen from the lobby. It gives no help inside the fight.
 
 ## Settings
 
@@ -20,5 +20,3 @@ A RuneLite plugin for waiting at The Nightmare's lobby.
 | Show lobby overlay | On |
 | Notify when she wakes | On |
 | Notify when fight ends | On |
-| Recolor shadows | Off |
-| Shadow color | Semi-transparent red |

@@ -3,21 +3,15 @@ package com.nightmareqol;
 import com.google.inject.Provides;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
 import javax.inject.Inject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.GameState;
-import net.runelite.api.GraphicsObject;
 import net.runelite.api.NPC;
 import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.GameTick;
-import net.runelite.api.events.GraphicsObjectCreated;
 import net.runelite.api.events.NpcChanged;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
-import net.runelite.api.gameval.SpotanimID;
 import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -28,7 +22,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 @Slf4j
 @PluginDescriptor(
 	name = "Nightmare QOL",
-	description = "Lobby alerts, a fight timer and shadow recoloring for The Nightmare",
+	description = "Lobby alerts and a fight timer for The Nightmare",
 	tags = {"nightmare", "ashihama", "lobby", "timer", "boss", "notification"}
 )
 public class NightmareQolPlugin extends Plugin
@@ -49,14 +43,7 @@ public class NightmareQolPlugin extends Plugin
 	private NightmareQolOverlay overlay;
 
 	@Inject
-	private ShadowOverlay shadowOverlay;
-
-	@Inject
 	private NightmareQolConfig config;
-
-	/** Grasping Claws shadows currently on the ground. */
-	@Getter
-	private final Set<GraphicsObject> shadows = new HashSet<>();
 
 	@Getter
 	private NPC lobbyNpc;
@@ -90,16 +77,13 @@ public class NightmareQolPlugin extends Plugin
 	protected void startUp()
 	{
 		overlayManager.add(overlay);
-		overlayManager.add(shadowOverlay);
 	}
 
 	@Override
 	protected void shutDown()
 	{
 		overlayManager.remove(overlay);
-		overlayManager.remove(shadowOverlay);
 		reset();
-		shadows.clear();
 	}
 
 	@Subscribe
@@ -152,36 +136,12 @@ public class NightmareQolPlugin extends Plugin
 	}
 
 	@Subscribe
-	public void onGraphicsObjectCreated(GraphicsObjectCreated event)
-	{
-		GraphicsObject graphicsObject = event.getGraphicsObject();
-		if (graphicsObject.getId() == SpotanimID.NIGHTMARE_RIFT)
-		{
-			shadows.add(graphicsObject);
-		}
-	}
-
-	@Subscribe
-	public void onGameTick(GameTick event)
-	{
-		if (!shadows.isEmpty())
-		{
-			shadows.removeIf(GraphicsObject::finished);
-		}
-	}
-
-	@Subscribe
 	public void onGameStateChanged(GameStateChanged event)
 	{
 		GameState gameState = event.getGameState();
-		if (gameState == GameState.LOADING)
-		{
-			shadows.clear();
-		}
 		if (gameState == GameState.HOPPING || gameState == GameState.LOGIN_SCREEN)
 		{
 			reset();
-			shadows.clear();
 		}
 	}
 

@@ -1,11 +1,8 @@
 package com.nightmareqol;
 
-import java.awt.Color;
-import net.runelite.client.config.Alpha;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
-import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Notification;
 
 @ConfigGroup(NightmareQolConfig.GROUP)
@@ -44,37 +41,5 @@ public interface NightmareQolConfig extends Config
 	default Notification notifyOnReady()
 	{
 		return Notification.ON;
-	}
-
-	@ConfigSection(
-		name = "Shadows",
-		description = "Recolor the black Grasping Claws shadows during the fight",
-		position = 10
-	)
-	String shadowSection = "shadows";
-
-	@ConfigItem(
-		keyName = "highlightShadows",
-		name = "Recolor shadows",
-		description = "Fill the Grasping Claws shadow tiles with a color that is easier to see",
-		position = 11,
-		section = shadowSection
-	)
-	default boolean highlightShadows()
-	{
-		return false;
-	}
-
-	@Alpha
-	@ConfigItem(
-		keyName = "shadowColor",
-		name = "Shadow color",
-		description = "Fill color for the shadow tiles (lower alpha = more see-through)",
-		position = 12,
-		section = shadowSection
-	)
-	default Color shadowColor()
-	{
-		return new Color(255, 0, 0, 110);
 	}
 }
