@@ -3,6 +3,8 @@ package com.nightmareqol;
 import com.google.inject.Provides;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import javax.inject.Inject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +14,7 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.NpcChanged;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
+import net.runelite.api.gameval.NpcID;
 import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -43,7 +46,14 @@ public class NightmareQolPlugin extends Plugin
 	private NightmareQolOverlay overlay;
 
 	@Inject
+	private TotemOverlay totemOverlay;
+
+	@Inject
 	private NightmareQolConfig config;
+
+	/** Totems currently in the scene. */
+	@Getter
+	private final Set<NPC> totems = new HashSet<>();
 
 	@Getter
 	private NPC lobbyNpc;
@@ -77,19 +87,27 @@ public class NightmareQolPlugin extends Plugin
 	protected void startUp()
 	{
 		overlayManager.add(overlay);
+		overlayManager.add(totemOverlay);
 	}
 
 	@Override
 	protected void shutDown()
 	{
 		overlayManager.remove(overlay);
+		overlayManager.remove(totemOverlay);
 		reset();
+		totems.clear();
 	}
 
 	@Subscribe
 	public void onNpcSpawned(NpcSpawned event)
 	{
 		NPC npc = event.getNpc();
+		if (isTotem(npc.getId()))
+		{
+			totems.add(npc);
+			return;
+		}
 		LobbyState spawned = LobbyState.fromNpcId(npc.getId());
 		if (spawned == LobbyState.UNKNOWN)
 		{
@@ -128,6 +146,7 @@ public class NightmareQolPlugin extends Plugin
 	@Subscribe
 	public void onNpcDespawned(NpcDespawned event)
 	{
+		totems.remove(event.getNpc());
 		if (event.getNpc() == lobbyNpc)
 		{
 			lobbyNpc = null;
@@ -142,6 +161,7 @@ public class NightmareQolPlugin extends Plugin
 		if (gameState == GameState.HOPPING || gameState == GameState.LOGIN_SCREEN)
 		{
 			reset();
+			totems.clear();
 		}
 	}
 
@@ -191,6 +211,11 @@ public class NightmareQolPlugin extends Plugin
 			fightStart = null;
 			fightStartExact = false;
 		}
+	}
+
+	private static boolean isTotem(int id)
+	{
+		return id >= NpcID.NIGHTMARE_TOTEM_1_DORMANT && id <= NpcID.NIGHTMARE_TOTEM_4_CHARGED;
 	}
 
 	private void reset()

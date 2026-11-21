@@ -42,4 +42,15 @@ public interface NightmareQolConfig extends Config
 	{
 		return Notification.ON;
 	}
+
+	@ConfigItem(
+		keyName = "highlightTotems",
+		name = "Highlight totems",
+		description = "Outline attackable totems, green with lots of health left fading to red as they run out",
+		position = 20
+	)
+	default boolean highlightTotems()
+	{
+		return false;
+	}
 }
