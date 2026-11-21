@@ -55,6 +55,9 @@ echo.
 cd /d "%REPO_DIR%"
 call gradlew.bat run
 if errorlevel 1 goto :fail
+echo.
+echo RuneLite closed.
+pause
 exit /b 0
 
 :fail
