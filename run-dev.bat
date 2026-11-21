@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal EnableDelayedExpansion
 title Nightmare QOL - dev client
 set "REPO_URL=https://github.com/dknut130/nightmare-qol"
 set "REPO_DIR=C:\GitHub\nightmare-qol"
@@ -10,34 +10,34 @@ echo.
 echo === Nightmare QOL: setup and launch ===
 echo.
 
-set "NEED_RESTART="
-
+rem ---- Git ----
 where git >nul 2>&1
 if errorlevel 1 (
-  echo Installing Git...
-  winget install --id Git.Git -e --silent --accept-source-agreements --accept-package-agreements
-  set "NEED_RESTART=1"
+  if exist "C:\Program Files\Git\cmd\git.exe" (
+    set "PATH=C:\Program Files\Git\cmd;!PATH!"
+  ) else (
+    echo Installing Git...
+    winget install --id Git.Git -e --silent --accept-source-agreements --accept-package-agreements
+    set "PATH=C:\Program Files\Git\cmd;!PATH!"
+  )
 )
 
-where java >nul 2>&1
-if errorlevel 1 (
-  echo Installing Java 17 ^(Temurin^)...
+rem ---- Java (Temurin 17) ----
+call :findjava
+if not defined JAVA_HOME (
+  echo Installing Java 17. Approve the Windows prompt if one appears...
   winget install --id EclipseAdoptium.Temurin.17.JDK -e --silent --accept-source-agreements --accept-package-agreements
-  set "NEED_RESTART=1"
+  call :findjava
 )
-
-if defined NEED_RESTART (
+if not defined JAVA_HOME (
   echo.
-  echo Installs finished. Windows needs a fresh window to see them.
-  echo Close this window and double-click this file again.
-  echo.
-  echo Also, do the one-time Jagex account login setup for the dev client:
-  start "" "https://github.com/runelite/runelite/wiki/Using-Jagex-Accounts"
-  pause
-  exit /b 0
+  echo Could not find or install Java.
+  goto :fail
 )
+set "PATH=!JAVA_HOME!\bin;!PATH!"
+echo Using Java at !JAVA_HOME!
 
-
+rem ---- Plugin code ----
 if exist "%REPO_DIR%\.git" (
   echo Getting the latest plugin code...
   git -C "%REPO_DIR%" pull --ff-only
@@ -60,8 +60,15 @@ echo RuneLite closed.
 pause
 exit /b 0
 
+:findjava
+set "JAVA_HOME="
+for /d %%D in ("C:\Program Files\Eclipse Adoptium\jdk-17*") do if exist "%%D\bin\java.exe" set "JAVA_HOME=%%D"
+if defined JAVA_HOME exit /b 0
+for /d %%D in ("C:\Program Files\Eclipse Adoptium\jdk-*") do if exist "%%D\bin\java.exe" set "JAVA_HOME=%%D"
+exit /b 0
+
 :fail
 echo.
-echo Something failed. Screenshot or copy the red text above and send it to Claude.
+echo Something failed. Screenshot this window and send it to Claude.
 pause
 exit /b 1
